@@ -19,7 +19,7 @@ struct Toast {
 
 /// 主应用状态
 pub struct SteamVrApp {
-    /// Steam 路径检测结果
+    /// SteamVR 路径检测结果
     steam_paths: Option<SteamPaths>,
     /// 当前 Steam 语言值 (注册表原始值)
     current_language: String,
@@ -36,7 +36,7 @@ pub struct SteamVrApp {
 
 impl SteamVrApp {
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
-        // 启动时自动检测 Steam 路径
+        // 启动时自动检测 SteamVR 路径
         let steam_paths = steam_path::detect_steam_path();
 
         // 启动时自动读取当前语言
@@ -78,23 +78,23 @@ impl SteamVrApp {
         }
     }
 
-    /// 重新检测 Steam 路径
+    /// 重新检测 SteamVR 路径
     fn detect_steam(&mut self) {
         self.is_working = true;
         self.steam_paths = steam_path::detect_steam_path();
         self.is_working = false;
 
         if self.steam_paths.is_some() {
-            self.show_toast("✅ 检测到 Steam 路径".to_string(), true);
+            self.show_toast("✅ 检测到 SteamVR 路径".to_string(), true);
         } else {
             self.show_toast(
-                "❌ 未检测到 Steam，请手动指定路径".to_string(),
+                "❌ 未检测到 SteamVR，请手动指定路径".to_string(),
                 false,
             );
         }
     }
 
-    /// 应用手动选择的 Steam 路径
+    /// 应用手动选择的 SteamVR 路径
     fn apply_manual_path(&mut self, path: &str) {
         self.is_working = true;
 
@@ -113,7 +113,7 @@ impl SteamVrApp {
 
         if Path::new(&steamvr_exe).exists() {
             self.steam_paths = Some(SteamPaths {
-                steam_path: path.to_string(),
+                steamvr_path: path.to_string(),
                 steamvr_exe,
             });
             self.show_toast("✅ 路径验证成功".to_string(), true);
@@ -201,25 +201,25 @@ impl eframe::App for SteamVrApp {
             ui.heading("SteamVR 快捷启动器");
             ui.spacing();
 
-            // ========== 区域 1: Steam 路径 ==========
+            // ========== 区域 1: SteamVR 路径 ==========
             egui::Frame::NONE
                 .fill(egui::Color32::from_black_alpha(40))
                 .inner_margin(egui::Margin::same(12))
                 .corner_radius(8.0)
                 .stroke(egui::Stroke::new(1.0, egui::Color32::from_gray(50)))
                 .show(ui, |ui| {
-                    ui.strong("Steam 路径");
+                    ui.strong("SteamVR 路径");
                     ui.separator();
 
                     // 显示检测到的路径
                     if let Some(ref paths) = self.steam_paths {
                         let green = egui::Color32::from_rgb(80, 200, 120);
-                        ui.colored_label(green, &paths.steam_path);
+                        ui.colored_label(green, &paths.steamvr_path);
                         ui.separator();
                         ui.label(format!("SteamVR: {}", paths.steamvr_exe));
                     } else {
                         let red = egui::Color32::from_rgb(220, 80, 80);
-                        ui.colored_label(red, "未检测到 Steam");
+                        ui.colored_label(red, "未检测到 SteamVR");
                     }
 
                     ui.horizontal(|ui| {
@@ -231,10 +231,10 @@ impl eframe::App for SteamVrApp {
                         }
                     });
 
-                    // 选择 Steam 安装路径
+                    // 选择 SteamVR 安装路径
                     ui.separator();
                     if ui
-                        .add_enabled(!self.is_working, egui::Button::new("📂 选择 Steam 安装路径"))
+                        .add_enabled(!self.is_working, egui::Button::new("📂 选择 SteamVR 安装路径"))
                         .clicked()
                     {
                         // 打开文件夹选择对话框
@@ -271,7 +271,7 @@ impl eframe::App for SteamVrApp {
                             }
                         });
                     } else {
-                        ui.label("检测到 Steam 后可创建快捷方式");
+                        ui.label("检测到 SteamVR 后可创建快捷方式");
                     }
                 });
 

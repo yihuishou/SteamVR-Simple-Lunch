@@ -3,21 +3,21 @@ use std::path::Path;
 use winreg::enums::{HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, KEY_READ};
 use winreg::RegKey;
 
-/// Steam 路径信息
+/// SteamVR 路径信息
 #[derive(Debug, Clone)]
 pub struct SteamPaths {
-    /// Steam 安装根目录
-    pub steam_path: String,
+    /// SteamVR 安装根目录
+    pub steamvr_path: String,
     /// SteamVR 启动程序完整路径
     pub steamvr_exe: String,
 }
 
-/// 检测 Steam 安装路径的错误类型
+/// 检测 SteamVR 路径的错误类型
 #[derive(Debug)]
 pub enum SteamPathError {
     /// 注册表读取失败
     RegistryError(String),
-    /// Steam 路径未在注册表中发现
+    /// SteamVR 路径未在注册表中发现
     SteamNotFound,
 }
 
@@ -102,7 +102,7 @@ fn search_vrstartup(dir: &Path) -> Option<SteamPaths> {
                     let full_exe = path.to_string_lossy().to_string();
                     if let Some(steam_root) = extract_steam_root(&path) {
                         return Some(SteamPaths {
-                            steam_path: steam_root,
+                            steamvr_path: steam_root,
                             steamvr_exe: full_exe,
                         });
                     }
@@ -152,7 +152,7 @@ pub fn detect_steam_path() -> Option<SteamPaths> {
     }
 
     Some(SteamPaths {
-        steam_path,
+        steamvr_path: steam_path,
         steamvr_exe,
     })
 }
@@ -167,7 +167,7 @@ mod tests {
         let result = detect_steam_path();
         match result {
             Some(paths) => {
-                assert!(!paths.steam_path.is_empty());
+                assert!(!paths.steamvr_path.is_empty());
                 assert!(paths.steamvr_exe.contains("vrstartup.exe"));
             }
             None => {
