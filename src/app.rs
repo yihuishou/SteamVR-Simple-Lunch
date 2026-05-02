@@ -94,18 +94,18 @@ impl SteamVrApp {
         }
     }
 
-    /// 应用手动输入的 Steam 路径
+    /// 应用手动选择的 Steam 路径
     fn apply_manual_path(&mut self, path: &str) {
         self.is_working = true;
 
         // 校验输入路径为绝对路径，防止路径注入
         if !Path::new(path).is_absolute() {
-            self.show_toast("❌ 请输入绝对路径".to_string(), false);
+            self.show_toast("❌ 请选择有效的目录".to_string(), false);
             self.is_working = false;
             return;
         }
 
-        // 拼接并验证 SteamVR exe 路径
+        // 先尝试直接拼接路径验证
         let steamvr_exe = format!(
             "{}\\steamapps\\common\\SteamVR\\bin\\win64\\vrstartup.exe",
             path
@@ -116,9 +116,15 @@ impl SteamVrApp {
                 steam_path: path.to_string(),
                 steamvr_exe,
             });
-            self.show_toast("✅ 手动路径验证成功".to_string(), true);
+            self.show_toast("✅ 路径验证成功".to_string(), true);
         } else {
-            self.show_toast("❌ 路径无效，找不到 vrstartup.exe".to_string(), false);
+            // 在选定目录及其子目录中递归搜索 vrstartup.exe
+            if let Some(found_paths) = steam_path::find_vrstartup_in_dir(path) {
+                self.steam_paths = Some(found_paths);
+                self.show_toast("✅ 在子目录中找到 SteamVR".to_string(), true);
+            } else {
+                self.show_toast("❌ 未找到 SteamVR，请确认目录正确".to_string(), false);
+            }
         }
 
         self.is_working = false;

@@ -1,3 +1,4 @@
+use std::fs;
 use std::path::Path;
 use winreg::enums::{HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, KEY_READ};
 use winreg::RegKey;
@@ -74,6 +75,66 @@ fn detect_steam_install_path() -> Result<String, SteamPathError> {
     detect_from_hkcu()
         .or_else(|_| detect_from_hklm_wow64())
         .or_else(|_| detect_from_hklm())
+}
+
+/// 递归搜索指定目录及其子目录，查找 `vrstartup.exe`
+///
+/// 返回 `Some(SteamPaths)` 表示找到了文件，`None` 表示未找到
+pub fn find_vrstartup_in_dir(dir: &str) -> Option<SteamPaths> {
+    let dir_path = Path::new(dir);
+    if !dir_path.is_dir() {
+        return None;
+    }
+
+    search_vrstartup(dir_path)
+}
+
+  /// 递归搜索目录下是否存在 `vrstartup.exe`，找到后推导 Steam 路径
+fn search_vrstartup(dir: &Path) -> Option<SteamPaths> {
+    for entry in fs::read_dir(dir).ok()? {
+        let entry = entry.ok()?;
+        let path = entry.path();
+
+        if path.is_file() {
+            if let Some(file_name) = path.file_name().and_then(|n| n.to_str()) {
+                if file_name == "vrstartup.exe" {
+                    // 从 exe 路径向上推导 Steam 根目录
+                    let full_exe = path.to_string_lossy().to_string();
+                    if let Some(steam_root) = extract_steam_root(&path) {
+                        return Some(SteamPaths {
+                            steam_path: steam_root,
+                            steamvr_exe: full_exe,
+                        });
+                    }
+                }
+            }
+        } else if path.is_dir() {
+            // 递归搜索子目录
+            if let Some(result) = search_vrstartup(&path) {
+                return Some(result);
+            }
+        }
+    }
+
+    None
+}
+
+/// 从 vrstartup.exe 的路径推导 Steam 根目录
+/// 期望路径包含 steamapps/common/SteamVR/bin/win64
+fn extract_steam_root(vrstartup_path: &Path) -> Option<String> {
+    let mut current = vrstartup_path.parent()?;
+    // bin/win64 -> SteamVR -> common -> steamapps -> steam root
+    for _ in 0..4 {
+        current = current.parent()?;
+    }
+
+    let steam_root = current.to_string_lossy().to_string();
+    // 验证：该目录下应该有 steamapps 文件夹
+    if Path::new(&steam_root).join("steamapps").is_dir() {
+        Some(steam_root)
+    } else {
+        None
+    }
 }
 
 /// 自动检测 Steam 安装路径和 SteamVR 启动程序
