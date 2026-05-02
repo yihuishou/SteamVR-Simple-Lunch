@@ -27,8 +27,7 @@ pub struct SteamVrApp {
     selected_language: usize,
     /// Toast 通知 (Some=显示中, None=无消息)
     toast: Option<Toast>,
-    /// 手动输入的 Steam 路径
-    manual_steam_path: String,
+  
     /// 操作是否进行中 (防重复点击)
     is_working: bool,
     /// 上一帧时间戳
@@ -55,7 +54,6 @@ impl SteamVrApp {
             current_language,
             selected_language,
             toast: None,
-            manual_steam_path: String::new(),
             is_working: false,
             last_time: None,
         }
@@ -90,7 +88,7 @@ impl SteamVrApp {
             self.show_toast("✅ 检测到 Steam 路径".to_string(), true);
         } else {
             self.show_toast(
-                "❌ 未检测到 Steam，请手动输入路径".to_string(),
+                "❌ 未检测到 Steam，请手动指定路径".to_string(),
                 false,
             );
         }
@@ -227,21 +225,18 @@ impl eframe::App for SteamVrApp {
                         }
                     });
 
-                    // 手动路径输入
+                    // 选择 Steam 安装路径
                     ui.separator();
-                    ui.label("手动输入 Steam 安装路径:");
-                    ui.horizontal(|ui| {
-                        ui.text_edit_singleline(&mut self.manual_steam_path);
-                        if ui
-                            .add_enabled(!self.is_working, egui::Button::new("应用"))
-                            .clicked()
-                        {
-                            let path = self.manual_steam_path.trim().to_string();
-                            if !path.is_empty() {
-                                self.apply_manual_path(&path);
-                            }
+                    if ui
+                        .add_enabled(!self.is_working, egui::Button::new("📂 选择 Steam 安装路径"))
+                        .clicked()
+                    {
+                        // 打开文件夹选择对话框
+                        if let Some(path) = rfd::FileDialog::new().pick_folder() {
+                            let path_str = path.to_string_lossy().to_string();
+                            self.apply_manual_path(&path_str);
                         }
-                    });
+                    }
                 });
 
             ui.spacing();

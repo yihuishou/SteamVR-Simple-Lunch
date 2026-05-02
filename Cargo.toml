@@ -9,6 +9,7 @@ egui = "0.31"
 winreg = "0.52"
 dirs = "5"
 lnks = "0.2.0"
+rfd = "0.15"
 
 [profile.release]
 strip = true
