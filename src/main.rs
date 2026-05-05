@@ -22,6 +22,9 @@ fn main() -> eframe::Result {
             let mut fonts = FontDefinitions::default();
             load_cjk_fonts(&mut fonts);
             cc.egui_ctx.set_fonts(fonts);
+            
+            // 全局 UI 缩放 1.2 倍
+            cc.egui_ctx.set_zoom_factor(1.2);
 
             Ok(Box::new(app::SteamVrApp::new(cc)))
         }),
