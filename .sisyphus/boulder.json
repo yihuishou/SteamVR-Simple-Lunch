@@ -1,0 +1,10 @@
+{
+  "active_plan": null,
+  "started_at": null,
+  "session_ids": [],
+  "plan_name": null,
+  "agent": null,
+  "status": "idle",
+  "completed_at": null,
+  "task_sessions": {}
+}
