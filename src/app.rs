@@ -136,7 +136,23 @@ impl SteamVrApp {
             self.is_working = true;
             let working_dir = shortcut_manager::get_working_dir_from_exe(&paths.steamvr_exe);
 
-            match shortcut_manager::create_desktop_shortcut(&paths.steamvr_exe, &working_dir) {
+            // 获取自定义图标路径（相对于可执行文件目录）
+            let icon_path = std::env::current_exe()
+                .ok()
+                .and_then(|exe_path| {
+                    let icon = exe_path.parent()?.join("assets").join("SteamVRIcon.ico");
+                    if icon.exists() {
+                        Some(icon.to_string_lossy().to_string())
+                    } else {
+                        None
+                    }
+                });
+
+            match shortcut_manager::create_desktop_shortcut(
+                &paths.steamvr_exe,
+                &working_dir,
+                icon_path.as_deref(),
+            ) {
                 Ok(()) => self.show_toast("✅ 桌面快捷方式创建成功".to_string(), true),
                 Err(e) => {
                     self.show_toast(format!("❌ 创建快捷方式失败: {}", e), false);
@@ -197,6 +213,8 @@ impl eframe::App for SteamVrApp {
         self.update_toast(dt);
 
         egui::CentralPanel::default().show(ctx, |ui| {
+ 
+
             // ========== 区域 1: SteamVR 路径 ==========
             egui::Frame::NONE
                 .fill(egui::Color32::from_black_alpha(40))

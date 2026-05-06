@@ -59,10 +59,15 @@ fn get_desktop_path() -> Result<PathBuf, ShortcutError> {
 /// # Arguments
 /// * `target_path` - 目标可执行文件的完整路径（如 vrstartup.exe）
 /// * `working_dir` - 工作目录（如 SteamVR\bin\win64\）
+/// * `icon_path` - 自定义图标路径（可选），未提供则使用目标 exe 图标
 ///
 /// # Returns
 /// 成功返回 Ok(())，失败返回 ShortcutError
-pub fn create_desktop_shortcut(target_path: &str, working_dir: &str) -> Result<(), ShortcutError> {
+pub fn create_desktop_shortcut(
+    target_path: &str,
+    working_dir: &str,
+    icon_path: Option<&str>,
+) -> Result<(), ShortcutError> {
     let desktop = get_desktop_path()?;
     let lnk_path = desktop.join("SteamVR.lnk");
 
@@ -71,11 +76,14 @@ pub fn create_desktop_shortcut(target_path: &str, working_dir: &str) -> Result<(
         std::fs::remove_file(&lnk_path)?;
     }
 
-     // 使用 lnks crate 构建并创建快捷方式
+    // 使用 lnks crate 构建并创建快捷方式
     let mut shortcut = lnks::Shortcut::new(target_path);
     shortcut.working_dir = Some(PathBuf::from(working_dir));
     shortcut.description = Some("SteamVR".to_string());
-    shortcut.icon = Some(lnks::Icon::with_index(std::path::PathBuf::from(target_path), 0));
+    shortcut.icon = Some(match icon_path {
+        Some(path) if Path::new(path).exists() => lnks::Icon::with_index(PathBuf::from(path), 0),
+        _ => lnks::Icon::with_index(PathBuf::from(target_path), 0),
+    });
 
     shortcut
         .save(&lnk_path)
