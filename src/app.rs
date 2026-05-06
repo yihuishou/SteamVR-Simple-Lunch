@@ -197,10 +197,6 @@ impl eframe::App for SteamVrApp {
         self.update_toast(dt);
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            // 标题
-            ui.heading("SteamVR 快捷启动器");
-            ui.spacing();
-
             // ========== 区域 1: SteamVR 路径 ==========
             egui::Frame::NONE
                 .fill(egui::Color32::from_black_alpha(40))
@@ -259,7 +255,7 @@ impl eframe::App for SteamVrApp {
 
                     if let Some(ref paths) = self.steam_paths {
                         ui.label(format!("目标: {}", paths.steamvr_exe));
-                       ui.horizontal(|ui| {
+                     ui.horizontal(|ui| {
                             if ui
                                 .add_enabled(
                                     !self.is_working,
