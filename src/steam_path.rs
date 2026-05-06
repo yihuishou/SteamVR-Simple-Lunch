@@ -89,7 +89,7 @@ pub fn find_vrstartup_in_dir(dir: &str) -> Option<SteamPaths> {
     search_vrstartup(dir_path)
 }
 
-  /// 递归搜索目录下是否存在 `vrstartup.exe`，找到后推导 Steam 路径
+  /// 递归搜索目录下是否存在 `vrstartup.exe`，找到后直接使用其所在目录
 fn search_vrstartup(dir: &Path) -> Option<SteamPaths> {
     for entry in fs::read_dir(dir).ok()? {
         let entry = entry.ok()?;
@@ -98,11 +98,10 @@ fn search_vrstartup(dir: &Path) -> Option<SteamPaths> {
         if path.is_file() {
             if let Some(file_name) = path.file_name().and_then(|n| n.to_str()) {
                 if file_name == "vrstartup.exe" {
-                    // 从 exe 路径向上推导 Steam 根目录
                     let full_exe = path.to_string_lossy().to_string();
-                    if let Some(steam_root) = extract_steam_root(&path) {
+                    if let Some(parent_dir) = path.parent() {
                         return Some(SteamPaths {
-                            steamvr_path: steam_root,
+                            steamvr_path: parent_dir.to_string_lossy().to_string(),
                             steamvr_exe: full_exe,
                         });
                     }
@@ -117,24 +116,6 @@ fn search_vrstartup(dir: &Path) -> Option<SteamPaths> {
     }
 
     None
-}
-
-/// 从 vrstartup.exe 的路径推导 Steam 根目录
-/// 期望路径包含 steamapps/common/SteamVR/bin/win64
-fn extract_steam_root(vrstartup_path: &Path) -> Option<String> {
-    let mut current = vrstartup_path.parent()?;
-    // bin/win64 -> SteamVR -> common -> steamapps -> steam root
-    for _ in 0..4 {
-        current = current.parent()?;
-    }
-
-    let steam_root = current.to_string_lossy().to_string();
-    // 验证：该目录下应该有 steamapps 文件夹
-    if Path::new(&steam_root).join("steamapps").is_dir() {
-        Some(steam_root)
-    } else {
-        None
-    }
 }
 
 /// 自动检测 Steam 安装路径和 SteamVR 启动程序
