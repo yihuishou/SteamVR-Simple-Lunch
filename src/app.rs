@@ -238,7 +238,7 @@ impl eframe::App for SteamVrApp {
 
                     ui.horizontal(|ui| {
                         if ui
-                            .add_enabled(!self.is_working, egui::Button::new("重新检测"))
+                            .add_enabled(!self.is_working, egui::Button::new("重新检测").min_size(egui::vec2(200.0, 0.0)))
                             .clicked()
                         {
                             self.detect_steam();
@@ -248,7 +248,7 @@ impl eframe::App for SteamVrApp {
                     // 选择 SteamVR 安装路径
                     ui.separator();
                     if ui
-                        .add_enabled(!self.is_working, egui::Button::new("📂 选择 SteamVR 安装路径"))
+                        .add_enabled(!self.is_working, egui::Button::new("📂 选择 SteamVR 安装路径").min_size(egui::vec2(200.0, 0.0)))
                         .clicked()
                     {
                         // 打开文件夹选择对话框
@@ -277,7 +277,7 @@ impl eframe::App for SteamVrApp {
                             if ui
                                 .add_enabled(
                                     !self.is_working,
-                                    egui::Button::new("创建桌面快捷方式"),
+                                    egui::Button::new("创建桌面快捷方式").min_size(egui::vec2(200.0, 0.0)),
                                 )
                                 .clicked()
                             {
@@ -337,6 +337,7 @@ impl eframe::App for SteamVrApp {
                 .add_enabled(
                     has_steam && !self.is_working,
                     egui::Button::new(egui::RichText::new("🚀 启动 SteamVR").color(egui::Color32::BLACK))
+                        .min_size(egui::vec2(200.0, 0.0))
                         .fill(if has_steam {
                             egui::Color32::from_rgb(40, 120, 200)
                         } else {
