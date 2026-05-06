@@ -9,7 +9,7 @@ use std::sync::Arc;
 fn main() -> eframe::Result {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_inner_size([600.0, 540.0])
+            .with_inner_size([600.0, 510.0])
             .with_title("SteamVR 快捷启动器"),
         ..Default::default()
     };
