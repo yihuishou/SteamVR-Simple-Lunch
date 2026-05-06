@@ -17,15 +17,12 @@ pub struct SteamPaths {
 pub enum SteamPathError {
     /// 注册表读取失败
     RegistryError(String),
-    /// SteamVR 路径未在注册表中发现
-    SteamNotFound,
 }
 
 impl std::fmt::Display for SteamPathError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             SteamPathError::RegistryError(msg) => write!(f, "注册表读取失败: {}", msg),
-            SteamPathError::SteamNotFound => write!(f, "未在注册表中找到 Steam 安装路径"),
         }
     }
 }

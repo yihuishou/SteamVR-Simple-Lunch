@@ -45,16 +45,6 @@ pub const LANGUAGES: &[(&str, &str)] = &[
     ("Polski", "polish"),
 ];
 
-/// 根据注册表值查找显示名称，找不到则返回原始值
-pub fn find_language_display(value: &str) -> &str {
-    for (display, reg_value) in LANGUAGES {
-        if *reg_value == value {
-            return display;
-        }
-    }
-    value
-}
-
 /// 从注册表读取当前 Steam 语言值
 /// 键路径: HKEY_CURRENT_USER\Software\Valve\Steam\Language
 /// 如果键不存在，返回默认值 "english"
@@ -87,28 +77,6 @@ pub fn write_steam_language(lang: &str) -> Result<(), LanguageError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_find_language_display_exact_match() {
-        assert_eq!(find_language_display("english"), "English");
-        assert_eq!(find_language_display("schinese"), "简体中文");
-        assert_eq!(find_language_display("tchinese"), "繁體中文");
-        assert_eq!(find_language_display("japanese"), "日本語");
-    }
-
-    #[test]
-    fn test_find_language_display_unknown() {
-        // 未知值应返回原始值
-        assert_eq!(find_language_display("unknown_lang"), "unknown_lang");
-        assert_eq!(find_language_display(""), "");
-    }
-
-    #[test]
-    fn test_find_language_display_case_sensitive() {
-        // 注册表值区分大小写
-        assert_eq!(find_language_display("English"), "English");
-        assert_eq!(find_language_display("SCHINESE"), "SCHINESE");
-    }
 
     #[test]
     fn test_languages_not_empty() {
