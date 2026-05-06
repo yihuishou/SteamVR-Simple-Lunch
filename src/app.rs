@@ -318,7 +318,7 @@ impl eframe::App for SteamVrApp {
 
                     ui.horizontal(|ui| {
                         if ui
-                            .add_enabled(!self.is_working, egui::Button::new("应用更改"))
+                            .add_enabled(!self.is_working, egui::Button::new("应用更改").min_size(egui::vec2(200.0, 0.0)))
                             .clicked()
                         {
                             self.apply_language();
