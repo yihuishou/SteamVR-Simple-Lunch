@@ -259,7 +259,7 @@ impl eframe::App for SteamVrApp {
 
                     if let Some(ref paths) = self.steam_paths {
                         ui.label(format!("目标: {}", paths.steamvr_exe));
-                        ui.horizontal(|ui| {
+                       ui.horizontal(|ui| {
                             if ui
                                 .add_enabled(
                                     !self.is_working,
@@ -322,11 +322,12 @@ impl eframe::App for SteamVrApp {
             if ui
                 .add_enabled(
                     has_steam && !self.is_working,
-                    egui::Button::new("🚀 启动 SteamVR").fill(if has_steam {
-                        egui::Color32::from_rgb(40, 120, 200)
-                    } else {
-                        egui::Color32::from_gray(60)
-                    }),
+                    egui::Button::new(egui::RichText::new("🚀 启动 SteamVR").color(egui::Color32::BLACK))
+                        .fill(if has_steam {
+                            egui::Color32::from_rgb(40, 120, 200)
+                        } else {
+                            egui::Color32::from_gray(60)
+                        }),
                 )
                 .clicked()
             {
