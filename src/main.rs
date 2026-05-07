@@ -3,14 +3,15 @@ mod shortcut_manager;
 mod steam_language;
 mod steam_path;
 
-use egui::{FontData, FontDefinitions, FontFamily};
+use egui::{FontData, FontDefinitions, FontFamily, IconData};
 use std::sync::Arc;
 
 fn main() -> eframe::Result {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([600.0, 510.0])
-            .with_title("SteamVR 快捷启动器"),
+            .with_title("SteamVR 快捷启动器")
+            .with_icon(load_app_icon()),
         ..Default::default()
     };
 
@@ -111,4 +112,23 @@ fn load_cjk_fonts(fonts: &mut FontDefinitions) {
             })
             .extend(cjk_proportional.iter().map(|s| s.to_string()));
     }
+}
+
+/// 加载应用图标（从 .ico 文件转换为 PNG 格式供 eframe 使用）
+fn load_app_icon() -> Arc<IconData> {
+    // 尝试从 assets 目录加载图标
+    let icon_path = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/SteamVRIcon.ico");
+    
+    if let Ok(image) = image::open(icon_path) {
+        let mut png_buffer = Vec::new();
+        if let Ok(()) = image.write_to(&mut std::io::Cursor::new(&mut png_buffer), image::ImageFormat::Png) {
+            // 使用 eframe 提供的 from_png_bytes 创建 IconData
+            if let Ok(icon_data) = eframe::icon_data::from_png_bytes(&png_buffer) {
+                return Arc::new(icon_data);
+            }
+        }
+    }
+    
+    // 如果加载失败，返回默认图标（eframe 会使用内置默认图标）
+    Arc::new(IconData::default())
 }

@@ -10,6 +10,10 @@ winreg = "0.52"
 dirs = "5"
 lnks = "0.2.0"
 rfd = "0.15"
+image = "0.25"
+
+[build-dependencies]
+winres = "0.1"
 
 [profile.release]
 strip = true
