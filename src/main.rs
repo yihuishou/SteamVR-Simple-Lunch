@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 mod app;
 mod shortcut_manager;
 mod steam_language;
