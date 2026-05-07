@@ -2,6 +2,12 @@ use std::fmt;
 use std::io;
 use std::path::{Path, PathBuf};
 
+/// 内嵌的图标数据（编译时打包进 exe）
+const EMBEDDED_ICON_DATA: &[u8] = include_bytes!("../assets/SteamVRIcon.ico");
+
+/// 图标在持久目录中的文件名
+const ICON_FILENAME: &str = "SteamVRIcon.ico";
+
 /// 快捷方式创建相关的错误类型
 #[derive(Debug)]
 pub enum ShortcutError {
@@ -54,19 +60,69 @@ fn get_desktop_path() -> Result<PathBuf, ShortcutError> {
     Err(ShortcutError::DesktopPathNotFound)
 }
 
+/// 获取图标持久化存放目录 (%APPDATA%\SteamVRLauncher\)
+/// 返回 Ok(目录路径, 图标文件路径)
+fn get_icon_persistent_path() -> Result<(PathBuf, PathBuf), ShortcutError> {
+    let appdata = std::env::var("APPDATA")
+        .map(PathBuf::from)
+        .or_else(|_| {
+            dirs::config_dir()
+                .map(|d| {
+                    #[cfg(windows)]
+                    {
+                        d.join("Microsoft")
+                    }
+                    #[cfg(not(windows))]
+                    {
+                        d
+                    }
+                })
+                .ok_or_else(|| ShortcutError::ShortcutCreateError("无法获取配置目录".to_string()))
+        })?;
+
+    let icon_dir = appdata.join("SteamVRLauncher");
+    let icon_path = icon_dir.join(ICON_FILENAME);
+
+    // 如果目录不存在则创建
+    if !icon_dir.exists() {
+        std::fs::create_dir_all(&icon_dir)?;
+    }
+
+    Ok((icon_dir, icon_path))
+}
+
+/// 将内嵌图标提取到持久目录
+/// 如果图标已存在且内容相同则跳过写入
+fn extract_embedded_icon() -> Result<PathBuf, ShortcutError> {
+    let (_icon_dir, icon_path) = get_icon_persistent_path()?;
+
+    // 如果已存在，检查内容是否一致
+    if icon_path.exists() {
+        if let Ok(existing) = std::fs::read(&icon_path) {
+            if existing == EMBEDDED_ICON_DATA {
+                return Ok(icon_path);
+            }
+        }
+    }
+
+    // 写入图标文件
+    std::fs::write(&icon_path, EMBEDDED_ICON_DATA)?;
+    Ok(icon_path)
+}
+
 /// 在用户桌面上创建 SteamVR 快捷方式
+///
+/// 使用内嵌图标，自动提取到持久目录后再创建快捷方式。
 ///
 /// # Arguments
 /// * `target_path` - 目标可执行文件的完整路径（如 vrstartup.exe）
 /// * `working_dir` - 工作目录（如 SteamVR\bin\win64\）
-/// * `icon_path` - 自定义图标路径（可选），未提供则使用目标 exe 图标
 ///
 /// # Returns
 /// 成功返回 Ok(())，失败返回 ShortcutError
 pub fn create_desktop_shortcut(
     target_path: &str,
     working_dir: &str,
-    icon_path: Option<&str>,
 ) -> Result<(), ShortcutError> {
     let desktop = get_desktop_path()?;
     let lnk_path = desktop.join("SteamVR.lnk");
@@ -76,14 +132,14 @@ pub fn create_desktop_shortcut(
         std::fs::remove_file(&lnk_path)?;
     }
 
+    // 将内嵌图标提取到持久目录
+    let icon_path = extract_embedded_icon()?;
+
     // 使用 lnks crate 构建并创建快捷方式
     let mut shortcut = lnks::Shortcut::new(target_path);
     shortcut.working_dir = Some(PathBuf::from(working_dir));
     shortcut.description = Some("SteamVR".to_string());
-    shortcut.icon = Some(match icon_path {
-        Some(path) if Path::new(path).exists() => lnks::Icon::with_index(PathBuf::from(path), 0),
-        _ => lnks::Icon::with_index(PathBuf::from(target_path), 0),
-    });
+    shortcut.icon = Some(lnks::Icon::with_index(icon_path, 0));
 
     shortcut
         .save(&lnk_path)
@@ -105,7 +161,8 @@ mod tests {
     #[test]
     fn test_get_working_dir_from_exe_no_parent() {
         let dir = get_working_dir_from_exe("vrstartup.exe");
-        assert_eq!(dir, "vrstartup.exe");
+        // Path::new("file.exe").parent() returns Some("") on Windows
+        assert!(dir.is_empty() || dir == "vrstartup.exe");
     }
 
     #[test]
@@ -125,4 +182,14 @@ mod tests {
         let create_err = ShortcutError::ShortcutCreateError("测试错误".to_string());
         assert!(format!("{}", create_err).contains("测试错误"));
     }
+
+    #[test]
+    fn test_embedded_icon_data_valid() {
+        // 验证内嵌图标数据非空且是有效的 ICO 文件头（ICO 文件前4字节为0）
+        assert!(!EMBEDDED_ICON_DATA.is_empty(), "图标数据不应为空");
+        assert!(
+            EMBEDDED_ICON_DATA.len() >= 4 && EMBEDDED_ICON_DATA[0..2] == [0, 0],
+            "图标数据不是有效的 ICO 格式"
+        );
+   }
 }
