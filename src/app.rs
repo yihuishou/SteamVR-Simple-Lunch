@@ -59,12 +59,12 @@ impl SteamVrApp {
         }
     }
 
-    /// 显示 Toast 消息 (持续 3 秒)
+    /// 显示 Toast 消息 (持续 6 秒)
     fn show_toast(&mut self, message: String, success: bool) {
         self.toast = Some(Toast {
             message,
             success,
-            remaining: 3.0,
+            remaining: 6.0,
         });
     }
 
