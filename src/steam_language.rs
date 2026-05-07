@@ -34,14 +34,12 @@ pub const LANGUAGES: &[(&str, &str)] = &[
     ("简体中文", "schinese"),
     ("繁體中文", "tchinese"),
     ("日本語", "japanese"),
-    ("한국어", "koreana"),
     ("Русский", "russian"),
     ("Deutsch", "german"),
     ("Français", "french"),
     ("Español", "spanish"),
     ("Italiano", "italian"),
     ("Português", "portuges"),
-    ("ภาษาไทย", "thai"),
     ("Polski", "polish"),
 ];
 
